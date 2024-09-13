@@ -1,21 +1,15 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import "./App.css";
 import { useRenderCount } from "@uidotdev/usehooks";
 
-function Todo({
-  done,
-  text,
-  toggle,
-}: {
-  toggle: (text: string) => void;
-  done: boolean;
-  text: string;
-}) {
+function Todo({ done: initDone, text }: { done: boolean; text: string }) {
   const renderCnt = useRenderCount();
+
+  const [done, setDone] = useState(initDone);
 
   return (
     <li
-      onClick={() => toggle(text)}
+      onClick={() => setDone((d) => !d)}
       className={"todo-list_item"}
       style={{ background: done ? "green" : "" }}
     >
@@ -26,37 +20,44 @@ function Todo({
   );
 }
 
-function App() {
-  const [todos, setTodos] = useState(
-    [
-      { done: true, text: "fff" },
-      { done: false, text: "eee" },
-      { done: true, text: "ddd" },
-    ].concat(
-      new Array(5)
-        .fill(null)
-        .map((_, idx) => ({ done: Math.random() > 0.5, text: "todo-" + idx })),
-    ),
-  );
+const todos = [
+  { done: true, text: "fff" },
+  { done: false, text: "eee" },
+  { done: true, text: "ddd" },
+].concat(
+  new Array(5)
+    .fill(null)
+    .map((_, idx) => ({ done: Math.random() > 0.5, text: "todo-" + idx })),
+);
 
-  function handleToggleTodo(text: string) {
-    setTodos((todos) => {
-      return todos.map((todo) => ({
-        ...todo,
-        done: todo.text === text ? !todo.done : todo.done,
-      }));
-    });
+const INIT_THEME_COLOR = "#0f3128";
+
+function App() {
+  const renderCnt = useRenderCount();
+  const inputThemeColor = useRef<HTMLInputElement>(null);
+  const [themeColor, setThemeColor] = useState(INIT_THEME_COLOR);
+
+  function handleThemeColorChange() {
+    const nextColor = inputThemeColor.current?.value!;
+    setThemeColor(nextColor);
   }
 
-  const renderCnt = useRenderCount();
   return (
     <>
-      <main>
+      <main style={{ backgroundColor: themeColor }}>
         <p>strict mode renders twice on re-render</p>
         <p>renderCnt:{renderCnt}</p>
+        <input
+          ref={inputThemeColor}
+          type="color"
+          name="theme-color"
+          id="theme-color"
+          onChange={handleThemeColorChange}
+          defaultValue={INIT_THEME_COLOR}
+        />
         <ol>
           {todos.map((todo) => (
-            <Todo toggle={handleToggleTodo} key={todo.text} {...todo} />
+            <Todo key={todo.text} {...todo} />
           ))}
         </ol>
       </main>
