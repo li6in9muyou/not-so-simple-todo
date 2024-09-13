@@ -1,33 +1,65 @@
 import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
 import "./App.css";
+import { useRenderCount } from "@uidotdev/usehooks";
 
-function App() {
-  const [count, setCount] = useState(0);
+function Todo({
+  done,
+  text,
+  toggle,
+}: {
+  toggle: (text: string) => void;
+  done: boolean;
+  text: string;
+}) {
+  const renderCnt = useRenderCount();
 
   return (
+    <li
+      onClick={() => toggle(text)}
+      className={"todo-list_item"}
+      style={{ background: done ? "green" : "" }}
+    >
+      <span>
+        renderCnt:{renderCnt} {done ? "done" : "not done"} {text}
+      </span>
+    </li>
+  );
+}
+
+function App() {
+  const [todos, setTodos] = useState(
+    [
+      { done: true, text: "fff" },
+      { done: false, text: "eee" },
+      { done: true, text: "ddd" },
+    ].concat(
+      new Array(5)
+        .fill(null)
+        .map((_, idx) => ({ done: Math.random() > 0.5, text: "todo-" + idx })),
+    ),
+  );
+
+  function handleToggleTodo(text: string) {
+    setTodos((todos) => {
+      return todos.map((todo) => ({
+        ...todo,
+        done: todo.text === text ? !todo.done : todo.done,
+      }));
+    });
+  }
+
+  const renderCnt = useRenderCount();
+  return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <main>
+        <p>strict mode renders twice on re-render</p>
+        <p>renderCnt:{renderCnt}</p>
+        <ol>
+          {todos.map((todo) => (
+            <Todo toggle={handleToggleTodo} key={todo.text} {...todo} />
+          ))}
+        </ol>
+      </main>
     </>
   );
 }
