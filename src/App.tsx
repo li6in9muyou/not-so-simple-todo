@@ -1,4 +1,11 @@
-import { useRef, useState } from "react";
+import {
+  ChangeEvent,
+  Children,
+  createContext,
+  useContext,
+  useRef,
+  useState,
+} from "react";
 import "./App.css";
 import { useRenderCount } from "@uidotdev/usehooks";
 
@@ -32,36 +39,53 @@ const todos = [
 
 const INIT_THEME_COLOR = "#0f3128";
 
-function App() {
-  const renderCnt = useRenderCount();
-  const inputThemeColor = useRef<HTMLInputElement>(null);
+const ThemedShellInputProvider = createContext(null);
+
+function ThemedShell(props: any) {
   const [themeColor, setThemeColor] = useState(INIT_THEME_COLOR);
 
-  function handleThemeColorChange() {
-    const nextColor = inputThemeColor.current?.value!;
+  function handleThemeColorChange(ev: ChangeEvent<HTMLInputElement>) {
+    const nextColor = ev.target.value;
     setThemeColor(nextColor);
+    console.log("dev handleThemeColorChange", nextColor);
   }
 
+  const renderCnt = useRenderCount();
   return (
-    <>
-      <main style={{ backgroundColor: themeColor }}>
-        <p>strict mode renders twice on re-render</p>
-        <p>renderCnt:{renderCnt}</p>
-        <input
-          ref={inputThemeColor}
-          type="color"
-          name="theme-color"
-          id="theme-color"
-          onChange={handleThemeColorChange}
-          defaultValue={INIT_THEME_COLOR}
-        />
-        <ol>
-          {todos.map((todo) => (
-            <Todo key={todo.text} {...todo} />
-          ))}
-        </ol>
-      </main>
-    </>
+    <main style={{ backgroundColor: themeColor }}>
+      <p>renderCnt:{renderCnt}</p>
+      <ThemedShellInputProvider.Provider
+        value={
+          <input
+            defaultValue={themeColor}
+            type="color"
+            name="theme-color"
+            id="theme-color"
+            onChange={handleThemeColorChange}
+          />
+        }
+      >
+        {props.children}
+      </ThemedShellInputProvider.Provider>
+    </main>
+  );
+}
+
+function App() {
+  const renderCnt = useRenderCount();
+  const colorPicker = useContext(ThemedShellInputProvider);
+
+  return (
+    <ThemedShell>
+      <p>strict mode renders twice on re-render</p>
+      <p>renderCnt:{renderCnt}</p>
+      {colorPicker}
+      <ol>
+        {todos.map((todo) => (
+          <Todo key={todo.text} {...todo} />
+        ))}
+      </ol>
+    </ThemedShell>
   );
 }
 
