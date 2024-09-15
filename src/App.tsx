@@ -1,11 +1,4 @@
-import {
-  ChangeEvent,
-  Children,
-  createContext,
-  useContext,
-  useRef,
-  useState,
-} from "react";
+import { ChangeEvent, useState } from "react";
 import "./App.css";
 import { useRenderCount } from "@uidotdev/usehooks";
 
@@ -21,7 +14,7 @@ function Todo({ done: initDone, text }: { done: boolean; text: string }) {
       style={{ background: done ? "green" : "" }}
     >
       <span>
-        renderCnt:{renderCnt} {done ? "done" : "not done"} {text}
+        todo renderCnt:{renderCnt} {done ? "done" : "not done"} {text}
       </span>
     </li>
   );
@@ -39,46 +32,48 @@ const todos = [
 
 const INIT_THEME_COLOR = "#0f3128";
 
-const ThemedShellInputProvider = createContext(null);
+function useThemedShell() {
+  let handleThemeColorChange: (ev: ChangeEvent<HTMLInputElement>) => void;
 
-function ThemedShell(props: any) {
-  const [themeColor, setThemeColor] = useState(INIT_THEME_COLOR);
+  function Shell(props: any) {
+    const [themeColor, setThemeColor] = useState(INIT_THEME_COLOR);
 
-  function handleThemeColorChange(ev: ChangeEvent<HTMLInputElement>) {
-    const nextColor = ev.target.value;
-    setThemeColor(nextColor);
-    console.log("dev handleThemeColorChange", nextColor);
+    handleThemeColorChange = (ev: ChangeEvent<HTMLInputElement>) => {
+      console.log("dev handleThemeColorChange", ev, ev.target.value);
+      const nextColor = ev.target.value;
+      setThemeColor(nextColor);
+    };
+
+    const renderCnt = useRenderCount();
+    return (
+      <main style={{ backgroundColor: themeColor }}>
+        <p>themed shell renderCnt:{renderCnt}</p>
+        {props.children}
+      </main>
+    );
   }
 
-  const renderCnt = useRenderCount();
-  return (
-    <main style={{ backgroundColor: themeColor }}>
-      <p>renderCnt:{renderCnt}</p>
-      <ThemedShellInputProvider.Provider
-        value={
-          <input
-            defaultValue={themeColor}
-            type="color"
-            name="theme-color"
-            id="theme-color"
-            onChange={handleThemeColorChange}
-          />
-        }
-      >
-        {props.children}
-      </ThemedShellInputProvider.Provider>
-    </main>
-  );
+  return [
+    Shell,
+    <input
+      defaultValue={INIT_THEME_COLOR}
+      type="color"
+      name="theme-color"
+      id="theme-color"
+      onChange={(e) => handleThemeColorChange(e)}
+    />,
+  ] as const;
 }
 
 function App() {
   const renderCnt = useRenderCount();
-  const colorPicker = useContext(ThemedShellInputProvider);
+
+  const [ThemedShell, colorPicker] = useThemedShell();
 
   return (
     <ThemedShell>
       <p>strict mode renders twice on re-render</p>
-      <p>renderCnt:{renderCnt}</p>
+      <p>app renderCnt:{renderCnt}</p>
       {colorPicker}
       <ol>
         {todos.map((todo) => (
