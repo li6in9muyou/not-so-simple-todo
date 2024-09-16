@@ -1,5 +1,5 @@
-import { ChangeEvent, useState } from "react";
 import "./App.css";
+import { ChangeEvent, useState } from "react";
 import { useRenderCount } from "@uidotdev/usehooks";
 
 function Todo({ done: initDone, text }: { done: boolean; text: string }) {
@@ -35,7 +35,7 @@ const INIT_THEME_COLOR = "#0f3128";
 function useThemedShell() {
   let handleThemeColorChange: (ev: ChangeEvent<HTMLInputElement>) => void;
 
-  function Shell(props: any) {
+  function Shell(props: React.PropsWithChildren<unknown>) {
     const [themeColor, setThemeColor] = useState(INIT_THEME_COLOR);
 
     handleThemeColorChange = (ev: ChangeEvent<HTMLInputElement>) => {
