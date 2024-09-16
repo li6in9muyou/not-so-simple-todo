@@ -1,5 +1,5 @@
 import "./App.css";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { useRenderCount } from "@uidotdev/usehooks";
 
 function Todo({ done: initDone, text }: { done: boolean; text: string }) {
@@ -33,16 +33,21 @@ const todos = [
 const INIT_THEME_COLOR = "#0f3128";
 
 function useThemedShell() {
-  let handleThemeColorChange: (ev: ChangeEvent<HTMLInputElement>) => void;
+  const refHandleThemeColorChange = useRef((() => {}) as (
+    ev: ChangeEvent<HTMLInputElement>,
+  ) => void);
 
   function Shell(props: React.PropsWithChildren<unknown>) {
     const [themeColor, setThemeColor] = useState(INIT_THEME_COLOR);
 
-    handleThemeColorChange = (ev: ChangeEvent<HTMLInputElement>) => {
-      console.log("dev handleThemeColorChange", ev, ev.target.value);
-      const nextColor = ev.target.value;
-      setThemeColor(nextColor);
-    };
+    useEffect(() => {
+      refHandleThemeColorChange.current = (
+        ev: ChangeEvent<HTMLInputElement>,
+      ) => {
+        const nextColor = ev.target.value;
+        setThemeColor(nextColor);
+      };
+    }, [setThemeColor]);
 
     const renderCnt = useRenderCount();
     return (
@@ -60,7 +65,7 @@ function useThemedShell() {
       type="color"
       name="theme-color"
       id="theme-color"
-      onChange={(e) => handleThemeColorChange(e)}
+      onChange={(e) => refHandleThemeColorChange.current?.(e)}
     />,
   ] as const;
 }
