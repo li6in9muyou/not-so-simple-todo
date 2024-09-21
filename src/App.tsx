@@ -25,9 +25,9 @@ const todos = [
   { done: false, text: "eee" },
   { done: true, text: "ddd" },
 ].concat(
-  new Array(5)
+  new Array(5e4)
     .fill(null)
-    .map((_, idx) => ({ done: Math.random() > 0.5, text: "todo-" + idx })),
+    .map((_, idx) => ({ done: Math.random() > 0.95, text: "todo-" + idx })),
 );
 
 const INIT_THEME_COLOR = "#0f3128";
@@ -70,18 +70,80 @@ function useThemedShell() {
   ] as const;
 }
 
+enum TODO_FILTER {
+  ALL = 1000,
+  DONE,
+  NOT_DONE,
+}
+
+function TodoFilterRadioButtons(props: {
+  value: TODO_FILTER;
+  onChange: (value: TODO_FILTER) => void;
+  options: { value: TODO_FILTER; label: string }[];
+}) {
+  const { value, onChange, options } = props;
+
+  function handleChange(e: ChangeEvent<HTMLInputElement>) {
+    onChange(+e.target.value);
+  }
+
+  return options.map((option) => {
+    const key = "todo-filter_" + option.label;
+    return (
+      <label htmlFor={key}>
+        <input
+          key={key}
+          type="radio"
+          name="todo-filter"
+          id={key}
+          value={option.value}
+          onChange={handleChange}
+          defaultChecked={option.value === value}
+        />
+        {option.label}
+      </label>
+    );
+  });
+}
+
 function App() {
   const renderCnt = useRenderCount();
 
   const [ThemedShell, colorPicker] = useThemedShell();
+
+  const [todoFilter, setTodoFilter] = useState(TODO_FILTER.ALL);
+  function handleTodoFilterChange(value: TODO_FILTER) {
+    setTodoFilter(value);
+  }
+
+  const showingTodos = todos.filter((todo) => {
+    switch (todoFilter) {
+      case TODO_FILTER.ALL:
+        return true;
+      case TODO_FILTER.DONE:
+        return todo.done;
+      case TODO_FILTER.NOT_DONE:
+        return !todo.done;
+    }
+  });
 
   return (
     <ThemedShell>
       <p>strict mode renders twice on re-render</p>
       <p>app renderCnt:{renderCnt}</p>
       {colorPicker}
+      {TodoFilterRadioButtons({
+        value: todoFilter,
+        onChange: handleTodoFilterChange,
+        options: [
+          { value: TODO_FILTER.NOT_DONE, label: "not done" },
+          { value: TODO_FILTER.ALL, label: "all" },
+          { value: TODO_FILTER.DONE, label: "done" },
+        ],
+      })}
+      <h2>showing {showingTodos.length} todos</h2>
       <ol>
-        {todos.map((todo) => (
+        {showingTodos.map((todo) => (
           <Todo key={todo.text} {...todo} />
         ))}
       </ol>
